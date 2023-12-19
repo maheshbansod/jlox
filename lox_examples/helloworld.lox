@@ -1,0 +1,8 @@
+
+// a simple hello world program in lox
+print "hello world"
+
+/**
+* the above prints the line "hello world"
+* and then exits
+**/
