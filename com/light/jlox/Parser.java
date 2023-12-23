@@ -21,8 +21,11 @@ class Parser {
     }
 
     private Expr expression() {
-        return equality();
-        
+        return commaExpr();
+    }
+
+    private Expr commaExpr() {
+        return matchBinExp(() -> equality(), COMMA);
     }
 
     private Expr equality() {
