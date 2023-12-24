@@ -1,19 +1,28 @@
 package com.light.jlox;
 
+import java.util.List;
+
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Unary;
+import com.light.jlox.Stmt.Expression;
+import com.light.jlox.Stmt.Print;
 
-class Interpreter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
-    void interpret(Expr expression) {
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement: statements ) {
+                execute(statement);
+            }
         } catch (RuntimeError e) {
             Lox.runtimeError(e);
         }
+    }
+
+    private void execute(Stmt statement) {
+        statement.accept(this);
     }
 
     private static String stringify(Object value) {
@@ -130,5 +139,18 @@ class Interpreter implements Expr.Visitor<Object> {
     private void checkNumberOperands(Token operator, Object left, Object right) {
         if (left instanceof Double && right instanceof Double) return;
         throw new RuntimeError(operator, "Operands must be numbers.");
+    }
+
+    @Override
+    public Void visitExpressionStmt(Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
     }
 }

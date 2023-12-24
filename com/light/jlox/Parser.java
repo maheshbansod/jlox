@@ -2,6 +2,7 @@ package com.light.jlox;
 
 import static com.light.jlox.TokenType.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class Parser {
@@ -12,12 +13,33 @@ class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
-        try {
-            return expression();
-        } catch(ParseError err) {
-            return null;
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(statement());
         }
+
+        return statements;
+    }
+
+    private Stmt statement() {
+        if (match(PRINT)) return printStatement();
+
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(SEMICOLON, "Expect ';' after value.");
+
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr value = expression();
+        consume(SEMICOLON, "Expect ';' after value.");
+
+        return new Stmt.Expression(value);
     }
 
     private Expr expression() {

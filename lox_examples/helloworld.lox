@@ -1,6 +1,6 @@
 
 // a simple hello world program in lox
-print "hello world"
+print "hello world";
 
 /**
 * the above prints the line "hello world"
