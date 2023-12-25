@@ -1,0 +1,9 @@
+var a = 5;
+var b = 10;
+
+a = 5 * 10 + b;
+
+print a;
+print b;
+
+print a + b;

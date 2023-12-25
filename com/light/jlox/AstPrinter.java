@@ -1,12 +1,16 @@
 package com.light.jlox;
 
+import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Unary;
+import com.light.jlox.Expr.Variable;
 
 class AstPrinter implements Expr.Visitor<String> {
-    String print(Expr expr) {
+    private Environment environment;
+    String print(Expr expr, Environment environment) {
+        this.environment = environment;
         return expr.accept(this);
     }
 
@@ -42,5 +46,18 @@ class AstPrinter implements Expr.Visitor<String> {
         builder.append(")");
 
         return builder.toString();
+    }
+
+    @Override
+    public String visitVariableExpr(Variable expr) {
+        Object value = environment.get(expr.name);
+        if (value == null) return null;
+        return value.toString();
+    }
+
+    @Override
+    public String visitAssignExpr(Assign expr) {
+        String lhs = expr.name.lexeme;
+        return parenthesize(lhs + " =", expr.value);
     }
 }

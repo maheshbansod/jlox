@@ -2,14 +2,19 @@ package com.light.jlox;
 
 import java.util.List;
 
+import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Unary;
+import com.light.jlox.Expr.Variable;
 import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.Print;
+import com.light.jlox.Stmt.Var;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+
+    private Environment environment = new Environment();
 
     void interpret(List<Stmt> statements) {
         try {
@@ -152,5 +157,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
         return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Var stmt) {
+        String name = stmt.name.lexeme;
+        Object initialization = null;
+        if (stmt.initializer != null) {
+            initialization = evaluate(stmt.initializer);
+        }
+        environment.define(name, initialization);
+        return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Variable expr) {
+        return environment.get(expr.name);
+    }
+
+    @Override
+    public Object visitAssignExpr(Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
     }
 }
