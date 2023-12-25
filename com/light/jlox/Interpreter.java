@@ -8,6 +8,7 @@ import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
+import com.light.jlox.Stmt.Block;
 import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.Print;
 import com.light.jlox.Stmt.Var;
@@ -180,5 +181,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(expr.value);
         environment.assign(expr.name, value);
         return value;
+    }
+
+    @Override
+    public Void visitBlockStmt(Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+
+        try {
+            this.environment = environment;
+
+            for (Stmt statement: statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
     }
 }
