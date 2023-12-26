@@ -14,6 +14,7 @@ import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.If;
 import com.light.jlox.Stmt.Print;
 import com.light.jlox.Stmt.Var;
+import com.light.jlox.Stmt.While;
 
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
@@ -226,5 +227,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         return evaluate(expr.right);
+    }
+
+    @Override
+    public Void visitWhileStmt(While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+        return null;
     }
 }
