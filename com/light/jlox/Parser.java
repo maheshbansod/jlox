@@ -273,7 +273,7 @@ class Parser {
     }
 
     private ParseError error(Token token, String message) {
-        Lox.error(current, message);
+        Lox.error(token.line, message);
         return new ParseError();
     }
 
