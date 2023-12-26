@@ -6,10 +6,12 @@ import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
+import com.light.jlox.Expr.Logical;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 import com.light.jlox.Stmt.Block;
 import com.light.jlox.Stmt.Expression;
+import com.light.jlox.Stmt.If;
 import com.light.jlox.Stmt.Print;
 import com.light.jlox.Stmt.Var;
 
@@ -201,5 +203,28 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         } finally {
             this.environment = previous;
         }
+    }
+
+    @Override
+    public Void visitIfStmt(If stmt) {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if(stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Logical expr) {
+        Object left = evaluate(expr.left);
+
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) return left;
+        } else {
+            if (!isTruthy(left)) return left;
+        }
+
+        return evaluate(expr.right);
     }
 }

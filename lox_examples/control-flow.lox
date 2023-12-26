@@ -1,0 +1,13 @@
+
+if (1 != 2) {
+    print "1 is not equal to 2";
+}
+
+var a = "A";
+
+if (a == "A") {
+    print "a = " + a;
+}
+
+print a or b;
+print a and b;

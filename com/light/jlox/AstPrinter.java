@@ -4,6 +4,7 @@ import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
+import com.light.jlox.Expr.Logical;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 
@@ -59,5 +60,10 @@ class AstPrinter implements Expr.Visitor<String> {
     public String visitAssignExpr(Assign expr) {
         String lhs = expr.name.lexeme;
         return parenthesize(lhs + " =", expr.value);
+    }
+
+    @Override
+    public String visitLogicalExpr(Logical expr) {
+        return parenthesize(expr.operator.lexeme, expr.left, expr.right);
     }
 }
