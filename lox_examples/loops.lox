@@ -21,3 +21,19 @@ for (var i = 1; i <= n ; i = i + 1) {
     b = a + b;
     a = temp;
 }
+
+// again fibonacci but this time we use break statement to stop
+n = 10;
+print "Printing " + n + " terms of the fibonacci sequence with break";
+
+var a = 0;
+var b = 1;
+for (var i = 1;  ; i = i + 1) {
+    if (i > n) {
+        break;
+    }
+    print i + " : " + b;
+    var temp = b;
+    b = a + b;
+    a = temp;
+}

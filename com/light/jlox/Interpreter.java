@@ -10,6 +10,7 @@ import com.light.jlox.Expr.Logical;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 import com.light.jlox.Stmt.Block;
+import com.light.jlox.Stmt.Break;
 import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.If;
 import com.light.jlox.Stmt.Print;
@@ -231,9 +232,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitWhileStmt(While stmt) {
-        while (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.body);
+        try {
+            while (isTruthy(evaluate(stmt.condition))) {
+                execute(stmt.body);
+            }
+        } catch (BreakExcpetion e) {
+            ;
         }
         return null;
     }
+
+    @Override
+    public Void visitBreakStmt(Break stmt) {
+        throw new BreakExcpetion();
+    }
+
+    private static class BreakExcpetion extends RuntimeException {}
 }
