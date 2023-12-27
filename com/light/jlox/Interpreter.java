@@ -260,7 +260,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             while (isTruthy(evaluate(stmt.condition))) {
                 execute(stmt.body);
             }
-        } catch (BreakExcpetion e) {
+        } catch (BreakException e) {
             ;
         }
         return null;
@@ -268,10 +268,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitBreakStmt(Break stmt) {
-        throw new BreakExcpetion();
+        throw new BreakException();
     }
 
-    private static class BreakExcpetion extends RuntimeException {}
+    private static class BreakException extends RuntimeException {
+        BreakException() {
+            super(null, null, false, false);
+        }
+    }
 
     @Override
     public Object visitCallExpr(Call expr) {
@@ -299,5 +303,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         LoxFunction function = new LoxFunction(stmt);
         environment.define(stmt.name.lexeme, function);
         return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+        
+        throw new Return(value);
     }
 }
