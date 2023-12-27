@@ -58,7 +58,7 @@ class Parser {
         }
       }
 
-    private Stmt function(String kind) {
+    private Stmt.Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
 
         consume(LEFT_PAREN, "Expecct '(' after " + kind + " name.");
@@ -94,6 +94,7 @@ class Parser {
     private Stmt statement() {
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
         if (match(BREAK)) return breakStatement();
+        if (match(CLASS)) return classStatement();
         if (match(FOR)) return forStatement();
         if (match(IF)) return ifStatement();
         if (match(PRINT)) return printStatement();
@@ -101,6 +102,20 @@ class Parser {
         if (match(WHILE)) return whileStatement();
 
         return expressionStatement();
+    }
+
+    private Stmt classStatement() {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+
+        consume(LEFT_BRACE, "Expect '{' before class body.");
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"));
+        }
+        consume(RIGHT_BRACE, "Expect '}' after class body");
+
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt returnStatement() {
@@ -222,6 +237,9 @@ class Parser {
             if (expr instanceof Expr.Variable) {
                 Token name = ((Expr.Variable)expr).name;
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get) {
+                Expr.Get get = (Expr.Get)expr;
+                return new Expr.Set(get.object, get.name, value);
             }
 
             error(equals, "Invalid assignment target.");
@@ -285,6 +303,9 @@ class Parser {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }
@@ -318,6 +339,8 @@ class Parser {
         }
 
         if (match(IDENTIFIER)) return new Expr.Variable(previous());
+
+        if (match(THIS)) return new Expr.This(previous());
 
         if (match(LEFT_PAREN)) {
             Expr expr = expression();

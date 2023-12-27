@@ -8,13 +8,17 @@ import java.util.Stack;
 import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Call;
+import com.light.jlox.Expr.Get;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Logical;
+import com.light.jlox.Expr.Set;
+import com.light.jlox.Expr.This;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 import com.light.jlox.Stmt.Block;
 import com.light.jlox.Stmt.Break;
+import com.light.jlox.Stmt.Class;
 import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.Function;
 import com.light.jlox.Stmt.If;
@@ -65,7 +69,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private enum FunctionType {
         NONE,
-        FUNCTION
+        FUNCTION,
+        METHOD
     }
 
     Resolver(Interpreter interpreter) {
@@ -274,6 +279,45 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 return;
             }
         }
+    }
+
+    @Override
+    public Void visitClassStmt(Class stmt) {
+        declare(stmt.name);
+        define(stmt.name);
+
+        beginScope();
+        var thisState = new VariableStaticState(stmt.name);
+        thisState.markUsed(); // to get rid of any unused variable errors
+        scopes.peek().put("this", thisState);
+
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            resolveFunction(method, declaration);
+        }
+
+        endScope();
+
+        return null;
+    }
+
+    @Override
+    public Void visitGetExpr(Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Set expr) {
+        resolve(expr.object);
+        resolve(expr.value);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(This expr) {
+        resolveLocal(expr, expr.keyword);
+        return null;
     }
     
 }

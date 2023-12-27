@@ -8,13 +8,17 @@ import java.util.Map;
 import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Call;
+import com.light.jlox.Expr.Get;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Logical;
+import com.light.jlox.Expr.Set;
+import com.light.jlox.Expr.This;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 import com.light.jlox.Stmt.Block;
 import com.light.jlox.Stmt.Break;
+import com.light.jlox.Stmt.Class;
 import com.light.jlox.Stmt.Expression;
 import com.light.jlox.Stmt.Function;
 import com.light.jlox.Stmt.If;
@@ -333,5 +337,46 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     public void resolve(Expr expr, int depth) {
         locals.put(expr, depth);
+    }
+
+    @Override
+    public Void visitClassStmt(Class stmt) {
+        environment.define(stmt.name.lexeme, null);
+        Map<String, LoxFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            LoxFunction function = new LoxFunction(method, environment);
+            methods.put(method.name.lexeme, function);
+        }
+        LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, klass);
+        return null;
+    }
+
+    @Override
+    public Object visitGetExpr(Get expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance) {
+            LoxInstance instance = (LoxInstance)object;
+            return instance.get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
+    public Object visitSetExpr(Set expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance) {
+            LoxInstance instance = (LoxInstance)object;
+            instance.set(expr.name, evaluate(expr.value));
+            return expr.value;
+        }
+
+        throw new RuntimeError(expr.name, "Only instances have fields");
+    }
+
+    @Override
+    public Object visitThisExpr(This expr) {
+        return lookUpVariable(expr.keyword, expr);
     }
 }
