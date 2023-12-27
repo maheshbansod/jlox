@@ -3,9 +3,12 @@ package com.light.jlox;
 import com.light.jlox.Expr.Assign;
 import com.light.jlox.Expr.Binary;
 import com.light.jlox.Expr.Call;
+import com.light.jlox.Expr.Get;
 import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Logical;
+import com.light.jlox.Expr.Set;
+import com.light.jlox.Expr.This;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
 
@@ -71,5 +74,23 @@ class AstPrinter implements Expr.Visitor<String> {
     @Override
     public String visitCallExpr(Call expr) {
         return parenthesize("fn(" + expr.callee.accept(this) + ")", expr.arguments.stream().toArray(Expr[]::new));
+    }
+
+    @Override
+    public String visitGetExpr(Get expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitGetExpr'");
+    }
+
+    @Override
+    public String visitSetExpr(Set expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitSetExpr'");
+    }
+
+    @Override
+    public String visitThisExpr(This expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitThisExpr'");
     }
 }
