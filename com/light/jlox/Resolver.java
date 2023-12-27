@@ -26,9 +26,42 @@ import com.light.jlox.Stmt.While;
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private final Interpreter interpreter;
-    private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+    private final Stack<Map<String, VariableStaticState>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
     private boolean isInLoop = false;
+
+    private class VariableStaticState {
+
+        private enum VariableState {
+            DECLARED,
+            INITIALIZED,
+            USED
+        }
+
+        private VariableState state;
+        Token token;
+
+        VariableStaticState(Token token) {
+            this.token = token;
+            state = VariableState.DECLARED;
+        }
+
+        void markInitialized() {
+            state = VariableState.INITIALIZED;
+        }
+
+        void markUsed() {
+            state = VariableState.USED;
+        }
+
+        boolean isUsed() {
+            return state == VariableState.USED;
+        }
+
+        boolean isUninitialized() {
+            return state == VariableState.DECLARED;
+        }
+    }
 
     private enum FunctionType {
         NONE,
@@ -48,11 +81,16 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void beginScope() {
-        scopes.push(new HashMap<String, Boolean>());
+        scopes.push(new HashMap<String, VariableStaticState>());
     }
 
     private void endScope() {
-        scopes.pop();
+        var scope = scopes.pop();
+        for (var entry : scope.entrySet()) {
+            if (!entry.getValue().isUsed() && !entry.getKey().startsWith("_")) {
+                Lox.error(entry.getValue().token, "Unused local variable.\n(Try prefixing the variable with '_' if this is intentional)");
+            }
+        }
     }
 
     void resolve(List<Stmt> statements) {
@@ -145,17 +183,17 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private void declare(Token name) {
         if (scopes.isEmpty()) return;
 
-        Map<String, Boolean> scope = scopes.peek();
+        var scope = scopes.peek();
         if (scope.containsKey(name.lexeme)) {
             Lox.error(name, "A variable with the same name already exists in this scope.");
         }
-        scope.put(name.lexeme, false);
+        scope.put(name.lexeme, new VariableStaticState(name));
     }
 
     private void define(Token name) {
         if (scopes.isEmpty()) return;
 
-        scopes.peek().put(name.lexeme, true);
+        scopes.peek().get(name.lexeme).markInitialized();
     }
 
     @Override
@@ -217,8 +255,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVariableExpr(Variable expr) {
-        if (!scopes.isEmpty() && scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
-            Lox.error(expr.name, "Can't read local variable in it's own initializer");
+        if (!scopes.isEmpty()) {
+            var scope = scopes.peek();
+            if (scope.containsKey(expr.name.lexeme) && scope.get(expr.name.lexeme).isUninitialized()) {
+                Lox.error(expr.name, "Can't read local variable in it's own initializer");
+            }
         }
         resolveLocal(expr, expr.name);
         return null;
@@ -226,7 +267,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void resolveLocal(Expr expr, Token name) {
         for (int i = scopes.size() - 1; i >= 0; i--) {
-            if (scopes.get(i).containsKey(name.lexeme)) {
+            var scope = scopes.get(i);
+            if (scope.containsKey(name.lexeme)) {
+                scope.get(name.lexeme).markUsed();
                 interpreter.resolve(expr, scopes.size() - 1 - i);
                 return;
             }

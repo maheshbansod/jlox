@@ -2,6 +2,7 @@ var a = 1;
 var b = 2;
 {
   var a = b + 2;
+  var _b = 4;
   print "a = " + a + ", expected 4";
 }
 print "a = " + a + ", expected 1";
