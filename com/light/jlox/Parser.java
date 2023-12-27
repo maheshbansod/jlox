@@ -10,8 +10,6 @@ class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    private static int loopDepth = 0;
-
     Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
@@ -118,11 +116,9 @@ class Parser {
     }
 
     private Stmt breakStatement() {
-        if (loopDepth <= 0) {
-            error(previous(), "Must be inside a loop to break.");
-        }
+        Token keyword = previous();
         consume(SEMICOLON, "Expect ';' after break");
-        return new Stmt.Break();
+        return new Stmt.Break(keyword);
     }
 
     private Stmt forStatement() {
@@ -149,39 +145,28 @@ class Parser {
         }
         consume(RIGHT_PAREN, "Expect ')' after for clauses");
 
-        try {
-            loopDepth ++;
+        Stmt body = statement();
 
-            Stmt body = statement();
-
-            if (increment != null) {
-                body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
-            }
-            if (condition == null) condition = new Expr.Literal(true);
-            body = new Stmt.While(condition, body);
-
-            if (initializer != null) {
-                body = new Stmt.Block(Arrays.asList(initializer, body));
-            }
-
-            return body;
-        } finally {
-            loopDepth --;
+        if (increment != null) {
+            body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
         }
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(Arrays.asList(initializer, body));
+        }
+
+        return body;
     }
 
     private Stmt whileStatement() {
         consume(LEFT_PAREN, "Expect '(' after 'while'.");
         Expr condition = expression();
         consume(RIGHT_PAREN, "Expect ')' after 'while' condition.");
-        try {
-            loopDepth ++;
 
-            Stmt body = statement();
-            return new Stmt.While(condition, body);
-        } finally {
-            loopDepth --;
-        }
+        Stmt body = statement();
+        return new Stmt.While(condition, body);
     }
 
     private Stmt ifStatement() {
