@@ -32,10 +32,33 @@ class Parser {
 
             return statement();
         } catch (ParseError e) {
-            // synchronize();
+            synchronize();
             return null;
         }
     }
+
+    private void synchronize() {
+        advance();
+    
+        while (!isAtEnd()) {
+          if (previous().type == SEMICOLON) return;
+    
+          switch (peek().type) {
+            case CLASS:
+            case FUN:
+            case VAR:
+            case FOR:
+            case IF:
+            case WHILE:
+            case PRINT:
+            case RETURN:
+              return;
+            default: break;
+          }
+    
+          advance();
+        }
+      }
 
     private Stmt function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
