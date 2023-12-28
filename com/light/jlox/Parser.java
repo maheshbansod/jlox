@@ -109,13 +109,19 @@ class Parser {
 
         List<Stmt.Function> methods = new ArrayList<>();
 
+        Expr.Variable superclass = null;
+        if (match(LESS)) {
+            Token superclassToken = consume(IDENTIFIER, "Expect superclass name.");
+            superclass = new Expr.Variable(superclassToken);
+        }
+
         consume(LEFT_BRACE, "Expect '{' before class body.");
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             methods.add(function("method"));
         }
         consume(RIGHT_BRACE, "Expect '}' after class body");
 
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Stmt returnStatement() {

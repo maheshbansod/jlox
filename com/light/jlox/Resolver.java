@@ -298,6 +298,14 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name);
         define(stmt.name);
 
+        if (stmt.superclass != null && stmt.superclass.name.lexeme.equals(stmt.name.lexeme)) {
+            Lox.error(stmt.superclass.name, "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass != null) {
+            resolve(stmt.superclass);
+        }
+
         beginScope();
         var thisState = new VariableStaticState(stmt.name);
         thisState.markUsed(); // to get rid of any unused variable errors
