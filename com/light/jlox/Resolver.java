@@ -13,6 +13,7 @@ import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Logical;
 import com.light.jlox.Expr.Set;
+import com.light.jlox.Expr.Super;
 import com.light.jlox.Expr.This;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
@@ -304,6 +305,10 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         if (stmt.superclass != null) {
             resolve(stmt.superclass);
+            beginScope();
+            var superclassState = new VariableStaticState(stmt.name);
+            superclassState.markUsed(); // to get rid of any unused variable errors
+            scopes.peek().put("super", superclassState);
         }
 
         beginScope();
@@ -318,6 +323,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         endScope();
+
+        if (stmt.superclass != null) endScope();
 
         currentClass = enclosingClassType;
 
@@ -343,6 +350,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Lox.error(expr.keyword, "Can't use 'this' outside of a class.");
             return null;
         }
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Super expr) {
         resolveLocal(expr, expr.keyword);
         return null;
     }

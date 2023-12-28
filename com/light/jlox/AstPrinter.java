@@ -8,6 +8,7 @@ import com.light.jlox.Expr.Grouping;
 import com.light.jlox.Expr.Literal;
 import com.light.jlox.Expr.Logical;
 import com.light.jlox.Expr.Set;
+import com.light.jlox.Expr.Super;
 import com.light.jlox.Expr.This;
 import com.light.jlox.Expr.Unary;
 import com.light.jlox.Expr.Variable;
@@ -92,5 +93,11 @@ class AstPrinter implements Expr.Visitor<String> {
     public String visitThisExpr(This expr) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visitThisExpr'");
+    }
+
+    @Override
+    public String visitSuperExpr(Super expr) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'visitSuperExpr'");
     }
 }
